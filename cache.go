@@ -5,7 +5,8 @@ import (
 
 	"github.com/golang/groupcache/lru"
 
-	"github.com/antchfx/xpath"
+	//"github.com/antchfx/xpath"
+	"github.com/Columbus-internet/xpath"
 )
 
 // DisableSelectorCache will disable caching for the query selector if value is true.

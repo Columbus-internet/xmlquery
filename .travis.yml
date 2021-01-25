@@ -9,7 +9,7 @@ go:
 
 install:
   - go get golang.org/x/net/html/charset
-  - go get github.com/antchfx/xpath
+  - go get github.com/Columbus-internet/xpath
   - go get github.com/mattn/goveralls
   - go get github.com/golang/groupcache
 

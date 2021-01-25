@@ -10,7 +10,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/antchfx/xpath"
+	//"github.com/antchfx/xpath"
+	"github.com/Columbus-internet/xpath"
 	"golang.org/x/net/html/charset"
 )
 

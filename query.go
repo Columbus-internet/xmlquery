@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antchfx/xpath"
+	//"github.com/antchfx/xpath"
+	"github.com/Columbus-internet/xpath"
 )
 
 // SelectElements finds child elements with the specified name.
@@ -47,7 +48,7 @@ var _ xpath.NodeNavigator = &NodeNavigator{}
 // CreateXPathNavigator creates a new xpath.NodeNavigator for the specified
 // XML Node.
 func CreateXPathNavigator(top *Node) *NodeNavigator {
-	return &NodeNavigator{curr: top, root: top, attr: -1}
+	return &NodeNavigator{curr: top, root: top, orig: top, attr: -1}
 }
 
 func getCurrentNode(it *xpath.NodeIterator) *Node {
@@ -149,8 +150,8 @@ func FindEachWithBreak(top *Node, expr string, cb func(int, *Node) bool) {
 }
 
 type NodeNavigator struct {
-	root, curr *Node
-	attr       int
+	root, curr, orig *Node
+	attr             int
 }
 
 func (x *NodeNavigator) Current() *Node {
@@ -217,7 +218,22 @@ func (x *NodeNavigator) Copy() xpath.NodeNavigator {
 }
 
 func (x *NodeNavigator) MoveToRoot() {
-	x.curr = x.root
+	for x.MoveToParent() {
+
+	}
+}
+
+func (x *NodeNavigator) Reset() {
+	x.curr = x.orig
+}
+
+func (x *NodeNavigator) SetCurrentAsOriginal() {
+	//x.lorig = x.curr
+}
+
+func (x *NodeNavigator) ResetToOriginal() {
+	//x.lorig = x.orig
+	//x.Reset()
 }
 
 func (x *NodeNavigator) MoveToParent() bool {

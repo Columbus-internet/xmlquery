@@ -103,7 +103,7 @@ func TestInvalidXPathExpression(t *testing.T) {
 }
 
 func TestNavigator(t *testing.T) {
-	nav := &NodeNavigator{curr: doc, root: doc, attr: -1}
+	nav := CreateXPathNavigator(doc)
 	nav.MoveToChild() // New Line
 	nav.MoveToNext()  // catalog
 	if nav.curr.Data != "catalog" {
