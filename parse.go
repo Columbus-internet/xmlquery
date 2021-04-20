@@ -33,7 +33,13 @@ func LoadURL(url string) (*Node, error) {
 
 // Parse returns the parse tree for the XML from the given Reader.
 func Parse(r io.Reader) (*Node, error) {
+	return ParseWithOptions(r, ParserOptions{})
+}
+
+// ParseWithOptions is like parse, but with custom options
+func ParseWithOptions(r io.Reader, options ParserOptions) (*Node, error) {
 	p := createParser(r)
+	options.apply(p)
 	for {
 		_, err := p.parse()
 		if err == io.EOF {
@@ -107,10 +113,16 @@ func (p *parser) parse() (*Node, error) {
 				}
 			}
 
-			for i := 0; i < len(tok.Attr); i++ {
-				att := &tok.Attr[i]
-				if prefix, ok := p.space2prefix[att.Name.Space]; ok {
-					att.Name.Space = prefix
+			attributes := make([]Attr, len(tok.Attr))
+			for i, att := range tok.Attr {
+				name := att.Name
+				if prefix, ok := p.space2prefix[name.Space]; ok {
+					name.Space = prefix
+				}
+				attributes[i] = Attr{
+					Name:         name,
+					Value:        att.Value,
+					NamespaceURI: att.Name.Space,
 				}
 			}
 
@@ -119,7 +131,7 @@ func (p *parser) parse() (*Node, error) {
 				Data:         tok.Name.Local,
 				Prefix:       p.space2prefix[tok.Name.Space],
 				NamespaceURI: tok.Name.Space,
-				Attr:         tok.Attr,
+				Attr:         attributes,
 				level:        p.level,
 			}
 
@@ -296,6 +308,16 @@ type StreamParser struct {
 // streamElementFilter, if provided, cannot be successfully parsed and compiled
 // into a valid xpath query.
 func CreateStreamParser(r io.Reader, streamElementXPath string, streamElementFilter ...string) (*StreamParser, error) {
+    return CreateStreamParserWithOptions(r, ParserOptions{}, streamElementXPath, streamElementFilter...)
+}
+
+// CreateStreamParserWithOptions is like CreateStreamParser, but with custom options
+func CreateStreamParserWithOptions(
+	r io.Reader,
+	options ParserOptions,
+	streamElementXPath string,
+	streamElementFilter ...string,
+) (*StreamParser, error) {
 	elemXPath, err := getQuery(streamElementXPath)
 	if err != nil {
 		return nil, fmt.Errorf("invalid streamElementXPath '%s', err: %s", streamElementXPath, err.Error())
@@ -307,8 +329,10 @@ func CreateStreamParser(r io.Reader, streamElementXPath string, streamElementFil
 			return nil, fmt.Errorf("invalid streamElementFilter '%s', err: %s", streamElementFilter[0], err.Error())
 		}
 	}
+	parser := createParser(r)
+	options.apply(parser)
 	sp := &StreamParser{
-		p: createParser(r),
+		p: parser,
 	}
 	sp.p.streamElementXPath = elemXPath
 	sp.p.streamElementFilter = elemFilter
@@ -326,8 +350,15 @@ func (sp *StreamParser) Read() (*Node, error) {
 	// Because this is a streaming read, we need to release/remove last
 	// target node from the node tree to free up memory.
 	if sp.p.streamNode != nil {
+		// We need to remove all siblings before the current stream node,
+		// because the document may contain unwanted nodes between the target
+		// ones (for example new line text node), which would otherwise
+		// accumulate as first childs, and slow down the stream over time
+		for sp.p.streamNode.PrevSibling != nil {
+			RemoveFromTree(sp.p.streamNode.PrevSibling)
+		}
+		sp.p.prev = sp.p.streamNode.Parent
 		RemoveFromTree(sp.p.streamNode)
-		sp.p.prev = sp.p.streamNodePrev
 		sp.p.streamNode = nil
 		sp.p.streamNodePrev = nil
 	}

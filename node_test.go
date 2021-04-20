@@ -134,7 +134,7 @@ func TestAddAttr(t *testing.T) {
 		},
 		{
 			name:     "node has existing attrs",
-			n:        &Node{Type: AttributeNode, Attr: []xml.Attr{{Name: xml.Name{Local: "k1"}, Value: "v1"}}},
+			n:        &Node{Type: AttributeNode, Attr: []Attr{{Name: xml.Name{Local: "k1"}, Value: "v1"}}},
 			key:      "k2",
 			val:      "v2",
 			expected: `< k1="v1" k2="v2"></>`,
@@ -409,4 +409,14 @@ func TestOutputXMLWithSpaceOverwrittenToDefault(t *testing.T) {
 		t.Errorf("the outputted xml contains newlines")
 	}
 	t.Log(n.OutputXML(false))
+}
+
+
+func TestOutputXMLWithXMLInCDATA(t *testing.T) {
+	s := `<?xml version="1.0" encoding="utf-8"?><node><![CDATA[<greeting>Hello, world!</greeting>]]></node>`
+	doc, _ := Parse(strings.NewReader(s))
+	t.Log(doc.OutputXML(false))
+	if doc.OutputXML(false) != s {
+		t.Errorf("the outputted xml escaped CDATA section")
+	}
 }
