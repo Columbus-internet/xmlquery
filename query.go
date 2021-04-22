@@ -293,7 +293,7 @@ func (x *NodeNavigator) MoveToNext() bool {
 	}
 	for node := x.curr.NextSibling; node != nil; node = x.curr.NextSibling {
 		x.curr = node
-		if x.curr.Type != TextNode {
+		if x.curr.Type != TextNode || strings.TrimSpace(x.curr.Data) != "" {
 			return true
 		}
 	}
@@ -306,7 +306,7 @@ func (x *NodeNavigator) MoveToPrevious() bool {
 	}
 	for node := x.curr.PrevSibling; node != nil; node = x.curr.PrevSibling {
 		x.curr = node
-		if x.curr.Type != TextNode {
+		if x.curr.Type != TextNode || strings.TrimSpace(x.curr.Data) != "" {
 			return true
 		}
 	}
