@@ -85,7 +85,7 @@ func calculatePreserveSpaces(n *Node, pastValue bool) bool {
 	return pastValue
 }
 
-func outputXML(buf *bytes.Buffer, n *Node, preserveSpaces bool) {
+func outputXML(buf *bytes.Buffer, n *Node, preserveSpaces, collapseEmptyNode bool) {
 	preserveSpaces = calculatePreserveSpaces(n, preserveSpaces)
 	switch n.Type {
 	case TextNode:
@@ -124,10 +124,16 @@ func outputXML(buf *bytes.Buffer, n *Node, preserveSpaces bool) {
 	if n.Type == DeclarationNode {
 		buf.WriteString("?>")
 	} else {
+		if collapseEmptyNode && n.FirstChild == nil {
+			// empty node
+			buf.WriteString("/>")
+			return
+		}
 		buf.WriteString(">")
 	}
+
 	for child := n.FirstChild; child != nil; child = child.NextSibling {
-		outputXML(buf, child, preserveSpaces)
+		outputXML(buf, child, preserveSpaces, collapseEmptyNode)
 	}
 	if n.Type != DeclarationNode {
 		if n.Prefix == "" {
@@ -140,12 +146,17 @@ func outputXML(buf *bytes.Buffer, n *Node, preserveSpaces bool) {
 
 // OutputXML returns the text that including tags name.
 func (n *Node) OutputXML(self bool) string {
+	return n.OutputXMLWithOptions(self, false)
+}
+
+// OutputXMLWithOptions returns the text that including tags name. Use collapseEmptyNode == true to get empty nodes like <xxx/>
+func (n *Node) OutputXMLWithOptions(self, collapseEmptyNode bool) string {
 	var buf bytes.Buffer
 	if self {
-		outputXML(&buf, n, false)
+		outputXML(&buf, n, false, collapseEmptyNode)
 	} else {
 		for n := n.FirstChild; n != nil; n = n.NextSibling {
-			outputXML(&buf, n, false)
+			outputXML(&buf, n, false, collapseEmptyNode)
 		}
 	}
 
