@@ -126,7 +126,7 @@ func outputXML(buf *bytes.Buffer, n *Node, preserveSpaces, collapseEmptyNode boo
 	} else {
 		if collapseEmptyNode && n.FirstChild == nil {
 			// empty node
-			buf.WriteString("/>")
+			buf.WriteString(" />")
 			return
 		}
 		buf.WriteString(">")
